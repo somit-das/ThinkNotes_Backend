@@ -6,6 +6,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -30,5 +33,28 @@ public class SecurityConfig {
         http.sessionManagement((session) -> {session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);});
         http.httpBasic(Customizer.withDefaults());
         return http.build();
+    }
+
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager inmanager = new InMemoryUserDetailsManager();
+        if(!inmanager.userExists("admin")){
+            inmanager.createUser(
+                    User.withUsername("admin")
+                            .password("{noop}password1")
+                            .roles("ADMIN")
+                            .build()
+            );
+        }
+        if(!inmanager.userExists("user")){
+            inmanager.createUser(
+                    User.withUsername("user")
+                            .password("{noop}password2")
+                            .roles("USER")
+                            .build()
+            );
+        }
+        return inmanager;
     }
 }
