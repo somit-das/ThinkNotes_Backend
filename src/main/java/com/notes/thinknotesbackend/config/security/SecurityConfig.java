@@ -9,7 +9,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
@@ -37,24 +40,44 @@ public class SecurityConfig {
 
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager inmanager = new InMemoryUserDetailsManager();
-        if(!inmanager.userExists("admin")){
-            inmanager.createUser(
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        JdbcUserDetailsManager jmanager = new JdbcUserDetailsManager(dataSource);
+        if(!jmanager.userExists("admin")){
+            jmanager.createUser(
                     User.withUsername("admin")
                             .password("{noop}password1")
                             .roles("ADMIN")
                             .build()
             );
         }
-        if(!inmanager.userExists("user")){
-            inmanager.createUser(
+        if(!jmanager.userExists("user")){
+            jmanager.createUser(
                     User.withUsername("user")
                             .password("{noop}password2")
                             .roles("USER")
                             .build()
             );
         }
-        return inmanager;
+        return jmanager;
     }
+
+/* For ABOVE JdbcUserDetailsManager  Default User Based on User entity based on JdbcDao has to be create table in provided database
+
+create table users(username varchar(50) not null primary key,password varchar(500) not null,enabled boolean not null);
+create table authorities (username varchar(50) not null,authority varchar(50) not null,constraint fk_authorities_users foreign key(username) references users(username));
+create unique index ix_auth_username on authorities (username,authority);
+
+
+ */
+/*
+ Here in  current setup that we have with JdbcUserDetails Manager works over here without specifying  those additional fields ( the account expiration, account locking, and credentials expiration)  as well  and the reason for this is because the user class, which JDBC User Details Manager uses to create the
+user, provides default values which is true for the account expiration, account locking, and credentials expiration. So
+And these defaults ensure that the users are always considered as non expired, non locked and with non expired credentials unless explicitly specified otherwise.
+
+This design allows spring security to function correctly with minimal schema, leveraging default assumptions for properties not explicitly stored in the database.
+so we are not storing any of these properties in the database like you just saw in the user class
+
+That is the reason we have to create custom User Entity to store  and UserDetails Implemented Class for Verification
+*/
+
 }
