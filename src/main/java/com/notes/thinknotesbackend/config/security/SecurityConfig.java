@@ -1,18 +1,24 @@
 package com.notes.thinknotesbackend.config.security;
 
+import com.notes.thinknotesbackend.entity.Role;
+import com.notes.thinknotesbackend.entity.User;
+import com.notes.thinknotesbackend.repository.RoleRepository;
+import com.notes.thinknotesbackend.repository.UserRepository;
+import com.notes.thinknotesbackend.util.AppRole;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
+
+
 import org.springframework.security.web.SecurityFilterChain;
 
-import javax.sql.DataSource;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Configuration
 @EnableWebSecurity
@@ -40,44 +46,40 @@ public class SecurityConfig {
 
 
     @Bean
-    public UserDetailsService userDetailsService(DataSource dataSource) {
-        JdbcUserDetailsManager jmanager = new JdbcUserDetailsManager(dataSource);
-        if(!jmanager.userExists("admin")){
-            jmanager.createUser(
-                    User.withUsername("admin")
-                            .password("{noop}password1")
-                            .roles("ADMIN")
-                            .build()
-            );
-        }
-        if(!jmanager.userExists("user")){
-            jmanager.createUser(
-                    User.withUsername("user")
-                            .password("{noop}password2")
-                            .roles("USER")
-                            .build()
-            );
-        }
-        return jmanager;
+    public CommandLineRunner initializeData(RoleRepository roleRepository, UserRepository userRepository) {
+        return args -> {
+//            Role Creation
+            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER).orElseGet(()->roleRepository.save(new Role(AppRole.ROLE_USER)));
+            Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN).orElseGet(()->roleRepository.save(new Role(AppRole.ROLE_ADMIN)));
+//            User Creation
+            if(!userRepository.existsByUserName("user1")){
+                User user1 = new User("user1","user1@sample.com","{noop}user20");
+                user1.setEnabled(true);
+                user1.setAccountNonExpired(true);
+                user1.setCredentialsNonExpired(true);
+                user1.setAccountNonLocked(false);
+                user1.setCreatedDate(LocalDateTime.now());
+                user1.setTwoFactorEnabled(false);
+                user1.setSignUpMethod("email");
+                user1.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
+                user1.setAccountExpiryDate(LocalDate.now().plusYears(1));
+                user1.setRole(userRole);
+                userRepository.save(user1);
+            }
+            if(!userRepository.existsByUserName("admin")){
+                User admin = new User("admin","admin@sample.com","{noop}admin22");
+                admin.setEnabled(true);
+                admin.setAccountNonExpired(true);
+                admin.setCredentialsNonExpired(true);
+                admin.setAccountNonLocked(false);
+                admin.setCreatedDate(LocalDateTime.now());
+                admin.setTwoFactorEnabled(false);
+                admin.setSignUpMethod("email");
+                admin.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
+                admin.setAccountExpiryDate(LocalDate.now().plusYears(1));
+                admin.setRole(adminRole);
+                userRepository.save(admin);
+            }
+        };
     }
-
-/* For ABOVE JdbcUserDetailsManager  Default User Based on User entity based on JdbcDao has to be create table in provided database
-
-create table users(username varchar(50) not null primary key,password varchar(500) not null,enabled boolean not null);
-create table authorities (username varchar(50) not null,authority varchar(50) not null,constraint fk_authorities_users foreign key(username) references users(username));
-create unique index ix_auth_username on authorities (username,authority);
-
-
- */
-/*
- Here in  current setup that we have with JdbcUserDetails Manager works over here without specifying  those additional fields ( the account expiration, account locking, and credentials expiration)  as well  and the reason for this is because the user class, which JDBC User Details Manager uses to create the
-user, provides default values which is true for the account expiration, account locking, and credentials expiration. So
-And these defaults ensure that the users are always considered as non expired, non locked and with non expired credentials unless explicitly specified otherwise.
-
-This design allows spring security to function correctly with minimal schema, leveraging default assumptions for properties not explicitly stored in the database.
-so we are not storing any of these properties in the database like you just saw in the user class
-
-That is the reason we have to create custom User Entity to store  and UserDetails Implemented Class for Verification
-*/
-
 }
