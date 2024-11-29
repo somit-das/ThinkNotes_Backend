@@ -17,6 +17,7 @@ import java.util.Objects;
 public class UserDetailsImpl  implements UserDetails {
     private static final long serialVersionUID = 1L;
 
+//    Fields
     private Long id;
     private String username;
     private String email;
@@ -28,6 +29,7 @@ public class UserDetailsImpl  implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
+//    Constructor & Methods
     public UserDetailsImpl(Long id, String username, String email, String password,
                            boolean is2faEnabled, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;

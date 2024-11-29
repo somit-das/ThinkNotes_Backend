@@ -61,6 +61,7 @@ public class User {
     @ToString.Exclude
     private Role role;
 
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;
@@ -91,3 +92,10 @@ public class User {
         return getClass().hashCode();
     }
 }
+
+/*
+    both @JsonBackReference and @JsonIgnore will prevent certain fields from appearing in the JSON response when the object is serialized (i.e., when the REST API sends the data back to the client). However, they do this in slightly different ways, and their use cases differ.
+    So While doing  Rest-API request  both @JsonBackReference and @JsonIgnore will help to ignore the field to be serialized as a result we will not get them as field in  json  data
+
+
+ */
