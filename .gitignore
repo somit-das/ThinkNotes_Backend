@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### spring app level ###
+application-dev.properties
+#application-prod.proprties ignored it will be configured depending upon environmental variables
