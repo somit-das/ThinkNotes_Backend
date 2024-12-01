@@ -1,5 +1,7 @@
 package com.notes.thinknotesbackend.config.security;
 
+import com.notes.thinknotesbackend.config.filter.CustomLoggingFilter;
+import com.notes.thinknotesbackend.config.filter.UserAgentFilter;
 import com.notes.thinknotesbackend.entity.Role;
 import com.notes.thinknotesbackend.entity.User;
 import com.notes.thinknotesbackend.repository.RoleRepository;
@@ -18,6 +20,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 
 import java.time.LocalDate;
@@ -34,18 +38,26 @@ public class SecurityConfig {
     }
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((requests) -> requests
+
+        //        http.csrf(csrf->csrf.disable());
+        http.csrf(csrf ->csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/public/**"));
+         http.authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/public/**").permitAll()  // any request that has public route will not get authenticated like /public/signup  and /public/signin
 //                .requestMatchers("/api/private/**").denyAll()
-
-//                Request Matcher is good for when construction or maintainance of apis and for deprecated endpoints
+                 .requestMatchers("/api/csrf-token").permitAll()
                 .anyRequest().authenticated());
 //        http.formLogin(Customizer.withDefaults());
-
-        http.csrf(csrf->csrf.disable());
-        http.sessionManagement((session) -> {session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);});
         http.httpBasic(Customizer.withDefaults());
+
+        http.addFilterBefore(new CustomLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterAfter(new RequestValidationFilter(), CustomLoggingFilter.class);
+        http.addFilterBefore(new UserAgentFilter(),CustomLoggingFilter.class);
+
+
+        http.sessionManagement((session) -> {session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);});
+
         return http.build();
     }
 
