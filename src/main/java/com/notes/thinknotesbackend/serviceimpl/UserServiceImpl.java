@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -20,6 +21,11 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Override
+    public User save(User user) {
+        return userRepository.save(user);
+    }
 
     @Override
     public List<User> getAllUsers() {
@@ -44,7 +50,7 @@ public class UserServiceImpl implements UserService {
         return convertToDto(user);
     }
 
-//  Utillity to convert User to UserDTO
+    //  Utillity to convert User to UserDTO
     private UserDTO convertToDto(User user) {
         return new UserDTO(
                 user.getUserId(),
@@ -63,6 +69,22 @@ public class UserServiceImpl implements UserService {
                 user.getCreatedDate(),
                 user.getUpdatedDate()
         );
+    }
+
+    @Override
+    public boolean existsByUserName(String username) {
+        return userRepository.existsByUserName(username);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public User findUserByuserName(String username) {
+        Optional<User> foundUser = userRepository.findByUserName(username);
+        return foundUser.orElseThrow(() -> new RuntimeException("User not found"));
     }
 
 
