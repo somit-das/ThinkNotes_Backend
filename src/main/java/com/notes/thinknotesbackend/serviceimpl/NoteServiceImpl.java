@@ -15,7 +15,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public Note createNoteForUser(String username, String content) {
         Note note = new Note();
-        note.setUsername(username);
+        note.setOwnerUsername(username);
         note.setContent(content);
 
         return noteRepository.save(note);
@@ -31,13 +31,13 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public void deleteNoteForUser(Long noteId, String username) {
-        Note foundNote = noteRepository.findNoteByIdAndUsername(noteId,username).orElseThrow(()->new RuntimeException("Note not found"));;
+        Note foundNote = noteRepository.findNoteByIdAndOwnerUsername(noteId,username).orElseThrow(()->new RuntimeException("Note not found"));;
         noteRepository.delete(foundNote);
 
     }
 
     @Override
     public List<Note> getAllNotesForUser(String username) {
-        return noteRepository.findNoteByUsername(username);
+        return noteRepository.findNoteByOwnerUsername(username);
     }
 }

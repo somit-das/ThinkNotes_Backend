@@ -14,5 +14,5 @@ public class Note {
     @Lob
     private String content;
 
-    private String username;
+    private String ownerUsername;
 }
